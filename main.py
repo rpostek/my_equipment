@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -8,9 +8,11 @@ import win32security
 from dotenv import load_dotenv
 import os
 import pyodbc
+from typing import Annotated
 
 load_dotenv()
 db_string = os.getenv('db_string')
+env_domain = os.getenv('domain').lower()
 app = FastAPI()
 
 def get_logged_ad_user(request):
@@ -25,7 +27,7 @@ def get_logged_ad_user(request):
             full_name = user_info['full_name']
             win32security.RevertToSelf() # undo impersonation
             win32api.CloseHandle(handle) # don't leak resources, need to close the handle!
-            if domain.lower() == 'bzmw':
+            if domain.lower() == env_domain:
                 return full_name
             else:
                 return None
@@ -65,7 +67,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
-async def root(request: Request, dep: str | None = None):
+async def root(request: Request, dep: Annotated[str | None, Query()] = None):
     if dep:
         dep = dep.upper()
         if dep not in ['WAG', 'WKS', 'UDW', 'WOS', 'ZIN', 'WOW', 'WIR', 'WGN', 'ZPKS', 'WSSL']:

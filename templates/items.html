@@ -27,7 +27,8 @@
     </style>
 </head>
 <body>
-    <h1 class="header">sprzęt {% if dep %} {{dep}} {% endif %}używany przez {{user}}</h1>
+    {% if items %}
+    <h1 class="header">wyposażenie {% if dep %} {{dep}} {% endif %}przypisane do {{user}}</h1>
     <table class="table table-striped table-sm" style="width:auto; margin: 10px;">
         <tr>
             <th>kod kreskowy</th>
@@ -50,5 +51,8 @@
         </tr>
         {% endfor %}
     </table>
+    {% else %}
+        <h1 class="header">{{user}} nie ma przypisanego żadnego wyposażenia {% if dep %}{{dep}} {% endif %}</h1>
+    {% endif %}
 </body>
 </html>
