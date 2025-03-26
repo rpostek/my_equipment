@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.requests import Request
+from starlette.responses import RedirectResponse
+from starlette import status
 import win32api
 import win32net
 import win32security
@@ -80,9 +82,6 @@ async def root(request: Request, dep: Annotated[str | None, Query()] = None):
         request=request, name="items.html", context={"items": opti.hosts, "user": full_name, "dep": dep}
     )
 
-
-@app.get("/a")
-async def root(request: Request, dep: str | None = None):
-    return templates.TemplateResponse(
-        request=request, name="items_table.html", context={"dep": dep}
-    )
+@app.exception_handler(404)
+def not_found_exception_handler(request: Request, exc: HTTPException):
+    return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
