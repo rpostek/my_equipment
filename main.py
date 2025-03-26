@@ -1,16 +1,14 @@
-from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi import FastAPI, Request, Query, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.requests import Request
-from starlette.responses import RedirectResponse
-from starlette import status
+from fastapi.responses import RedirectResponse
+from typing import Annotated
 import win32api
 import win32net
 import win32security
 from dotenv import load_dotenv
 import os
 import pyodbc
-from typing import Annotated
 
 load_dotenv()
 db_string = os.getenv('db_string')
@@ -21,14 +19,14 @@ def get_logged_ad_user(request):
     try:
         if 'x-iis-windowsauthtoken' in request.headers.keys():
             handle_str = request.headers['x-iis-windowsauthtoken']
-            handle = int(handle_str, 16) # need to convert from Hex / base 16
+            handle = int(handle_str, 16)
             win32security.ImpersonateLoggedOnUser(handle)
             sid = win32security.GetTokenInformation(handle, 1)[0]
             username, domain, account_type = win32security.LookupAccountSid(None, sid)
             user_info = win32net.NetUserGetInfo(win32net.NetGetAnyDCName(), username, 2)
             full_name = user_info['full_name']
-            win32security.RevertToSelf() # undo impersonation
-            win32api.CloseHandle(handle) # don't leak resources, need to close the handle!
+            win32security.RevertToSelf()
+            win32api.CloseHandle(handle)
             if domain.lower() == env_domain:
                 return full_name
             else:
